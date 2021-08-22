@@ -1,0 +1,21 @@
+
+.upload-image-container {
+  
+}
+
+.image-dropzone {
+  min-height: 50px !important;
+  margin-top: 20px;
+  margin-top: 10px;
+}
+
+.button-container {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 5%;
+}
+
+.UploadButton {
+  top: 50% !important;
+}
