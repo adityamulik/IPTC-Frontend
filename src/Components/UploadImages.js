@@ -1,4 +1,5 @@
-import React, {useCallback, useState} from 'react';
+import React, {useState, useEffect} from 'react';
+import axios from 'axios';
 import './UploadImages.css';
 import {DropzoneArea} from 'material-ui-dropzone';
 import Button from '@material-ui/core/Button';
@@ -7,19 +8,68 @@ const UploadImages = () => {
 
   const [count, setCount] = useState(0);
   const [files, setFiles] = useState([]);
+  const [excelFile, setExcelFile] = useState([]);
+  const [uploaded, setUploaded] = useState(true);  
+
+
+  useEffect(() => {
+    if (count > 0 && excelFile !== undefined) {
+      setUploaded(false);
+    }
+  }, [count, excelFile]);
 
   const handleChange = (loadedFiles) => {
     setCount(loadedFiles.length);
-    setFiles(loadedFiles);
+    // console.log(loadedFiles);
+    setFiles(loadedFiles)          
   }
 
-  const handleGetMetadata = () => {
-    console.log('getMetadata');
+  const handleExcelFile = loadedFiles => {
+    // console.log(loadedFiles[0]);
+    setExcelFile(loadedFiles[0]);   
   }
 
-  const handleSetMetadata = () => {
-    console.log('setMetadata');
-    console.log(files);
+  const handleGetMetadata = (e) => {
+    e.preventDefault();
+    // console.log('getMetadata');    
+  }
+
+  const handleSetMetadata = (e) => {
+    e.preventDefault();
+
+    let form_data = new FormData();
+
+    files.map(file => {
+      form_data.append('images', file)
+      return true;
+    })    
+    form_data.append('excel', excelFile)
+
+    let url = 'http://127.0.0.1:8000/api/files-upload';
+
+    axios.post(url, form_data, {
+      headers: {
+        'content-type': 'multipart/form-data'
+      }
+    })
+      .then(res => {
+        var a = document.createElement("a");
+        document.body.appendChild(a);
+        a.style = "display: none";
+        console.log("Here");
+        // console.log(res);
+        url = window.URL.createObjectURL(new Blob([JSON.stringify(res.data)], {type: "application/zip"}))
+        // window.open(url, 'Download');
+      })
+      .catch(err => console.log(err));
+  }
+
+  const handleValidateExcel = () => {
+
+  };
+
+  const handleDownloadExcelTemplate = () => {
+    window.open(process.env.PUBLIC_URL + "/iptc_metadata.csv", 'Download');
   }
 
   return (
@@ -27,6 +77,7 @@ const UploadImages = () => {
       <h4>Total images uploaded: {count}</h4>   
       <DropzoneArea 
         filesLimit={5000000}
+        maxFileSize={100000000}
         acceptedFiles={['image/jpeg', 'image/png', 'image/bmp']}
         dropzoneText="Drop or click to upload Images here."
         dropzoneClass="image-dropzone"
@@ -35,22 +86,34 @@ const UploadImages = () => {
       />      
       <DropzoneArea
         filesLimit={1}
-        acceptedFiles={['.xlsx', '.csv']}
-        dropzoneText="Drop or click to upload excel here."
+        acceptedFiles={['.csv']}
+        dropzoneText="Drop or click to upload csv file here."
         dropzoneClass="image-dropzone"
+        onChange={loadedFiles => handleExcelFile(loadedFiles)}
       />
-      <div className="button-container">
-        <Button 
-          variant="contained" 
-          className="UploadButton"
-          onClick={handleGetMetadata}
-        >Get Metadata</Button>
-        <Button 
-          variant="contained" 
-          className="UploadButton"
-          onClick={handleSetMetadata}
-        >Set Metadata</Button>
-      </div>
+      <Button 
+        variant="contained" 
+        className="uploadbutton"
+        onClick={handleGetMetadata}
+        disabled={uploaded}
+      >Get Metadata</Button>
+      <Button 
+        variant="contained" 
+        className="uploadbutton"
+        onClick={handleSetMetadata}
+        disabled={uploaded}
+      >Set Metadata</Button>
+      <Button 
+        variant="contained" 
+        className="uploadbutton"
+        onClick={handleValidateExcel}
+        disabled={uploaded}
+      >Validate</Button>
+      <Button 
+        variant="contained" 
+        className="uploadbutton"
+        onClick={handleDownloadExcelTemplate}
+      >CSV Template</Button>     
     </div>
   )
 }
