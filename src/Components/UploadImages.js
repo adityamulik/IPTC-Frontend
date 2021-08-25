@@ -15,6 +15,8 @@ const UploadImages = () => {
   useEffect(() => {
     if (count > 0 && excelFile !== undefined) {
       setUploaded(false);
+    } else {
+      setUploaded(true);
     }
   }, [count, excelFile]);
 
