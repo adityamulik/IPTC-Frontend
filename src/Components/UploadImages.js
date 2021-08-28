@@ -3,6 +3,7 @@ import axios from 'axios';
 import './UploadImages.css';
 import {DropzoneArea} from 'material-ui-dropzone';
 import Button from '@material-ui/core/Button';
+import Alert from '@material-ui/lab/Alert';
 
 const FileDownload = require('js-file-download');
 
@@ -12,7 +13,9 @@ const UploadImages = () => {
   const [files, setFiles] = useState([]);
   const [excelFile, setExcelFile] = useState([]);
   const [uploaded, setUploaded] = useState(true);  
-
+  const [disabledAlert, setAlert] = useState(true);
+  const [wrongImageUpload, setWrongImageUpload] = useState([]);
+  const [disabledSuccessAlert, setDisabledSuccessAlert] = useState(false);
 
   useEffect(() => {
     if (count > 0 && excelFile !== undefined) {
@@ -67,8 +70,38 @@ const UploadImages = () => {
       .catch(err => console.log(err));
   }
 
-  const handleValidateExcel = () => {
+  const handleValidateExcel = e => {
+    e.preventDefault();
 
+    let form_data = new FormData();
+
+    files.map(file => {
+      form_data.append('images', file)
+      return true;
+    })    
+    form_data.append('excel', excelFile)
+
+    let url = 'http://127.0.0.1:8000/api/validate-excel';
+
+    axios.post(url, form_data, {
+      headers: {
+        'content-type': 'multipart/form-data'
+      }
+    })
+      .then(res => {
+        if (res.data["error"]) {
+          setWrongImageUpload(res.data["error"]);  
+          setAlert(true);        
+        }
+        else if (res.data["success"] === 0) {
+          setDisabledSuccessAlert(true);
+        }
+        setTimeout(() => {
+          setAlert(false);
+          setDisabledSuccessAlert(false);
+        }, 5000);
+      })
+      .catch(err => console.log(err));
   };
 
   const handleDownloadExcelTemplate = () => {
@@ -77,7 +110,13 @@ const UploadImages = () => {
 
   return (
     <div className="upload-image-container">   
-      <h4>Total images uploaded: {count}</h4>   
+      <h4>Total images uploaded: {count}</h4>     
+      {
+        disabledSuccessAlert ? 
+          <Alert severity="success" className="alert">Validation Successful!</Alert>
+        : 
+        null
+      }
       <DropzoneArea 
         filesLimit={5000000}
         maxFileSize={100000000}
@@ -116,7 +155,17 @@ const UploadImages = () => {
         variant="contained" 
         className="uploadbutton"
         onClick={handleDownloadExcelTemplate}
-      >CSV Template</Button>     
+      >CSV Template</Button>  
+      {
+        disabledAlert ? 
+        wrongImageUpload.map(img => {
+          return (
+            <Alert severity="error" className="alert">Please check the image name in excel: {img}</Alert>
+          )
+        })
+        : 
+        null
+      }   
     </div>
   )
 }
