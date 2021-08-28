@@ -4,6 +4,8 @@ import './UploadImages.css';
 import {DropzoneArea} from 'material-ui-dropzone';
 import Button from '@material-ui/core/Button';
 
+const FileDownload = require('js-file-download');
+
 const UploadImages = () => {
 
   const [count, setCount] = useState(0);
@@ -47,21 +49,20 @@ const UploadImages = () => {
     })    
     form_data.append('excel', excelFile)
 
-    let url = 'http://127.0.0.1:8000/api/files-upload';
+    let url = 'http://127.0.0.1:8000/api/save-metadata';
 
     axios.post(url, form_data, {
+      responseType: 'arraybuffer',
       headers: {
         'content-type': 'multipart/form-data'
       }
     })
       .then(res => {
-        var a = document.createElement("a");
-        document.body.appendChild(a);
-        a.style = "display: none";
-        console.log("Here");
-        // console.log(res);
-        url = window.URL.createObjectURL(new Blob([JSON.stringify(res.data)], {type: "application/zip"}))
-        // window.open(url, 'Download');
+        const blob = new Blob([res.data], {
+          type: 'application/zip'
+        })
+        const filename = 'images.zip';
+        FileDownload(blob, filename);
       })
       .catch(err => console.log(err));
   }
