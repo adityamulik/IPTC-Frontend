@@ -38,7 +38,32 @@ const UploadImages = () => {
 
   const handleGetMetadata = (e) => {
     e.preventDefault();
-    // console.log('getMetadata');    
+
+    let form_data = new FormData();
+
+    files.map(file => {
+      form_data.append('images', file)
+      return true;
+    })    
+    form_data.append('excel', excelFile)
+
+    let url = 'http://127.0.0.1:8000/api/get-metadata';
+
+    axios.post(url, form_data, {
+      // responseType: 'arraybuffer',
+      headers: {
+        'content-type': 'multipart/form-data'
+      }
+    })
+      .then(res => {
+        console.log(res);
+        // const blob = new Blob([res.data], {
+        //   type: 'application/zip'
+        // })
+        // const filename = 'images.zip';
+        // FileDownload(blob, filename);
+      })
+      .catch(err => console.log(err));   
   }
 
   const handleSetMetadata = (e) => {
@@ -137,7 +162,7 @@ const UploadImages = () => {
         variant="contained" 
         className="uploadbutton"
         onClick={handleGetMetadata}
-        disabled={uploaded}
+        disabled={true}
       >Get Metadata</Button>
       <Button 
         variant="contained" 
